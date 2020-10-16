@@ -13,52 +13,52 @@ class Solve
 {
 
 public:
-	static float linearFunc(vector<float> factors);
-	static float linearFunc(Formula formula);
+	static double linearFunc(vector<double> factors);
+	static double linearFunc(Formula formula);
 
-	static vector<float> quadraticFunc(vector<float> factors);
-	static vector<float> quadraticFunc(Formula formula);
+	static vector<double> quadraticFunc(vector<double> factors);
+	static vector<double> quadraticFunc(Formula formula);
 
-	static set<float> cubicFuncAndHigher(Formula &formula);
+	static set<double> cubicFuncAndHigher(Formula formula);
 
-	static set<float> substitutionToQuadraticFunc(Formula formula);
+	static set<double> substitutionToQuadraticFunc(Formula formula);
 
-	static set<float> theoremOfBezout(Formula &formula);
+	static set<double> theoremOfBezout(Formula formula);
 
 
-	static vector<int> getDividers(float numberToDivide);
+	static set<int> getDividers(double numberToDivide);
 
-	static vector<float> getPotentialRationalRoots(Formula formula);
+	static set<double> getPotentialRationalRoots(Formula formula);
 
-	static set<float> commonPartOfCollections(vector<vector<float>> collections);
-	static set<float> commonPartOfCollections(initializer_list<vector<float>> collections);
+	static set<double> commonPartOfCollections(vector<vector<double>> collections);
+	static set<double> commonPartOfCollections(initializer_list<vector<double>> collections);
 
 	static pair<Formula, Formula> pullOutBeforeBracket(Formula formula);
-	static pair<vector<float>, vector<float>> pullOutBeforeBracket(vector<float> factors);
+	static pair<vector<double>, vector<double>> pullOutBeforeBracket(vector<double> factors);
 
 	static Formula addingFormulas(Formula formula1, Formula formula2);
-	static vector<float> addingFormulas(vector<float> factors1, vector<float> factors2);
+	static vector<double> addingFormulas(vector<double> factors1, vector<double> factors2);
 
 	static Formula subtractingFormulas(Formula formula1, Formula formula2);
-	static vector<float> subtractingFormulas(vector<float> factors1, vector<float> factors2);
+	static vector<double> subtractingFormulas(vector<double> factors1, vector<double> factors2);
 
 	static Formula multiplicationFormulas(Formula formula1, Formula formula2);
-	static vector<float> multiplicationFormulas(vector<float> factors1, vector<float> factors2);
+	static vector<double> multiplicationFormulas(vector<double> factors1, vector<double> factors2);
 
 	// Zwraca jedn¹ parê równañ:
 	// 1. Pierwsze równanie jest wielomianem, który jest wynikiem dzielenia
 	// 2. Drugie równanie jest reszt¹ z dzielenia, równie¿ zwracane jako równanie 
 	static pair<Formula, Formula> divisionFormulas(Formula formula1, Formula formula2);
-	static pair<vector<float>, vector<float>> divisionFormulas(vector<float> factors1, vector<float> factors2);
+	static pair<vector<double>, vector<double>> divisionFormulas(vector<double> factors1, vector<double> factors2);
 
 
 	static bool isLinear(Formula formula);
-	static bool isLinear(vector<float> factors);
+	static bool isLinear(vector<double> factors);
 
 	static bool isQuadratic(Formula formula);
-	static bool isQuadratic(vector<float> factors);
+	static bool isQuadratic(vector<double> factors);
 	
 	static bool isCubicOrHigher(Formula formula);
-	static bool isCubicOrHigher(vector<float> factors);
+	static bool isCubicOrHigher(vector<double> factors);
 };
 

@@ -2,26 +2,26 @@
 
 Formula::Formula() 
 {
-	factors = vector<float>(1);
+	factors = vector<double>(1);
 
 	factors[0] = 0;
 }
 
 Formula::Formula(int degree)
 {
-	factors = vector<float>(degree + 1);
+	factors = vector<double>(degree + 1);
 	
 	factors[degree] = 1;
 }
 
-Formula::Formula(vector<float> factors) 
+Formula::Formula(vector<double> factors) 
 {
 	this->factors = factors;
 }
 
 Formula::~Formula() {}
 
-void Formula::setFactor(int factorNumber, float value)
+void Formula::setFactor(int factorNumber, double value)
 {
 	if (isPositiveValue(factorNumber) == false)
 	{
@@ -50,7 +50,12 @@ void Formula::setFactor(int factorNumber, float value)
 	}
 }
 
-void Formula::setDegree(int degree, bool setFactorValueOfFactorDegreeNumber, float factorValue)
+void Formula::setAllFactors(vector<double> factors)
+{
+	this->factors = factors;
+}
+
+void Formula::setDegree(int degree, bool setFactorValueOfFactorDegreeNumber, double factorValue)
 {
 	if (isPositiveValue(degree) == false)
 	{
@@ -71,7 +76,7 @@ void Formula::setDegree(int degree, bool setFactorValueOfFactorDegreeNumber, flo
 	}
 }
 
-float Formula::getFactor(int factorNumber)
+double Formula::getFactor(int factorNumber)
 {
 	if (isPositiveValue(factorNumber) == false)
 	{
@@ -88,7 +93,7 @@ float Formula::getFactor(int factorNumber)
 	}
 }
 
-vector<float> Formula::getAllFactors()
+vector<double> Formula::getAllFactors()
 {
 	return factors;
 }
@@ -109,7 +114,7 @@ int Formula::getDegree()
 	return factors.size() - 1;
 }
 
-double Formula::getY(float x)
+double Formula::getY(double x)
 {
 	double y = 0;
 
@@ -136,7 +141,7 @@ void Formula::clear()
 	setDegree(0, true, 0);
 }
 
-void Formula::addToFactor(int factorNumber, float value)
+void Formula::addToFactor(int factorNumber, double value)
 {
 	if (isPositiveValue(factorNumber) == false)
 	{
@@ -171,19 +176,19 @@ string Formula::convertToText()
 		{
 			if (i != duplicate.getDegree()) text += "  +";
 
-			if (duplicate.getFactor(i) != 1 || i == 0) text += to_string(duplicate.getFactor(i));
+			if (duplicate.getFactor(i) != 1 || i == 0) text += toString(duplicate.getFactor(i));
 		}
 		else if (duplicate.getFactor(i) < 0)
 		{
 			if(i != duplicate.getDegree()) text += "  -";
 			else text += "-";
 			
-			if (duplicate.getFactor(i) != -1 || i == 0) text += to_string(-1 * duplicate.getFactor(i));
+			if (duplicate.getFactor(i) != -1 || i == 0) text += toString(-1 * duplicate.getFactor(i));
 		}
 
 		if (i >= 1) text += "x";
 
-		if(i >= 2) text += to_string(i);
+		if(i >= 2) text += toString(i);
 	}
 
 	return text;
@@ -215,5 +220,17 @@ bool Formula::isPositiveValue(int value)
 {
 	if (value >= 0) return true;
 	else return false;
+}
+
+string Formula::toString(double number)
+{
+	ostringstream streamObject;
+
+	// Wy³¹cza notacjê wyk³adnicz¹
+	streamObject.precision(std::numeric_limits<double>::digits10);
+
+	streamObject << number;
+
+	return streamObject.str();
 }
 

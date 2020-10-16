@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string>
 #include <utility>
+#include <sstream>
 
 using namespace std;
 
@@ -12,22 +13,23 @@ class Formula
 public:
 	Formula();
 	Formula(int degree);
-	Formula(vector<float> factors);
+	Formula(vector<double> factors);
 	~Formula();
 
-	void setFactor(int factorNumber, float value);
-	void setDegree(int degree, bool setFactorValueOfFactorDegreeNumber = false, float factorValue = 1);
+	void setFactor(int factorNumber, double value);
+	void setAllFactors(vector<double> factors);
+	void setDegree(int degree, bool setFactorValueOfFactorDegreeNumber = false, double factorValue = 1);
 
-	float getFactor(int factorNumber);
-	vector<float> getAllFactors();
+	double getFactor(int factorNumber);
+	vector<double> getAllFactors();
 	int getNumberOfNonzeroFactors();
 	int getDegree();
-	double getY(float x);
+	double getY(double x);
 
 	void removeZeroFactorsFromTheBeginning();
 	void clear();
 
-	void addToFactor(int factorNumber, float value);
+	void addToFactor(int factorNumber, double value);
 
 	string convertToText();
 
@@ -35,8 +37,9 @@ public:
 
 private:
 	bool isPositiveValue(int value);
+	string toString(double number);
 
-	vector<float> factors;
+	vector<double> factors;
 
 	// Postaæ iloczynowa przedstawiona jako zestaw wielomianów w nawiasach przemno¿onych przez siebie (czysta postaæ iloczynowa)
 	vector<Formula> productForm;

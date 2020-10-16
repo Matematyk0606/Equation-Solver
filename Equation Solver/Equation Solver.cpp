@@ -3,6 +3,7 @@
 #include <fcntl.h>
 #include <stdexcept>
 #include <windows.h>
+#include <conio.h>
 #include "Formula.h"
 #include "Solve.h"
 
@@ -12,19 +13,29 @@ int main()
 {
 	_setmode(_fileno(stdout), _O_U16TEXT);
 
-	wcout << L"Podaj stopień równania:" << endl;
-
 	unsigned int degree;
+	vector<double> factors;
+	bool firstFactors = true;
+	Formula initialFormula(factors);
+	string formulaConvertedToText;
+
+START:
+
+	wcout << L"Podaj stopień równania: ";
+
+	//unsigned int degree;
 	wcin >> degree;
 
-	vector<float> factors;
-	bool firstFactors = true;
+	wcout << endl;
+
+	//vector<double> factors;
+	//bool firstFactors = true;
 
 	for (int i = degree; i >= 0; i--)
 	{
 		wcout << L"Podaj "<< i << L". współczynnik równania: ";
 
-		float factor;
+		double factor;
 		wcin >> factor;
 
 		if (firstFactors && factor == 0 && factors.size() != 0) continue;
@@ -33,13 +44,15 @@ int main()
 		factors.insert(factors.begin(), factor);
 	}
 
-	Formula initialFormula(factors);
+	//Formula initialFormula(factors);
+	initialFormula.setAllFactors(factors);
 
-	string text1 = initialFormula.convertToText();
+	//string formulaConvertedToText = initialFormula.convertToText();
+	formulaConvertedToText = initialFormula.convertToText();
 
-	wcout << text1.c_str() << endl;
+	wcout << endl << formulaConvertedToText.c_str() << endl << endl;
 
-	//Formula formula2(vector<float>{-1, 3, -3, 1});
+	//Formula formula2(vector<double>{-1, 3, -3, 1});
 		
 	//text1 = formula2.convertToText();
 
@@ -54,7 +67,7 @@ int main()
 	// Równanie 1. stopnia
 	if (factors.size() == 2)
 	{
-		float x = Solve::linearFunc(factors);
+		double x = Solve::linearFunc(factors);
 
 		wcout << L"Rozwiązanie wielomianu 1. stopnia: x = " << x << endl;
 	}
@@ -72,11 +85,22 @@ int main()
 	// Równanie stopnia wyższego niż 2.
 	else if (factors.size() > 3)
 	{
-		auto roots = Solve::theoremOfBezout(initialFormula);
+		//auto roots = Solve::theoremOfBezout(initialFormula);
+		auto roots = Solve::cubicFuncAndHigher(initialFormula);
 
-		wcout << L"Rozwiązanie wielomianu " << initialFormula.getDegree() << ". stopnia:" << endl;
+		if (roots.size() > 0)
+		{
+			wcout << L"Rozwiązania wielomianu " << initialFormula.getDegree() << L". stopnia, które udało mi się znaleźć:" << endl;
 
-		for (auto i : roots) wcout << "x = " << i << endl;
+			for (auto i : roots) wcout << "x = " << i << endl;
+		}
+		else
+			wcout << L"Nie potrafię znaleźć rozwiązań podanego wielomianu!" << endl;
 	}
-	
+
+	initialFormula.clear();
+	factors.clear();
+	goto START;
+
+	_getch();
 }

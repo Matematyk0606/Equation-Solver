@@ -1,11 +1,12 @@
-#include "Solve.h"
+ï»¿#include "Solve.h"
 
-float Solve::linearFunc(vector<float> factors)
+
+double Solve::linearFunc(vector<double> factors)
 {
 	if(isLinear(factors))
 	{ 
-		float a = factors[1];
-		float b = factors[0];
+		double a = factors[1];
+		double b = factors[0];
 
 		if (a < 0)
 		{
@@ -13,52 +14,52 @@ float Solve::linearFunc(vector<float> factors)
 			b *= -1;
 		}
 
-		float x = ((-1 * b) / a);
+		double x = ((-1 * b) / a);
 
 		return x;
 	}
 	else
 	{
-		wcout << L"ALERT (Funkcja liniowa): Przekazano funkcjê inn¹ ni¿ liniow¹!!!" << endl;
-		throw runtime_error("ALERT (Funkcja liniowa): Przekazano funkcjê inn¹ ni¿ liniowa!!!");
+		wcout << L"ALERT (Funkcja liniowa): Przekazano funkcjÄ™ innÄ… niÅ¼ liniowÄ…!!!" << endl;
+		throw runtime_error("ALERT (Funkcja liniowa): Przekazano funkcjÄ™ innÄ… niÅ¼ liniowa!!!");
 
 		return 0.0f;
 	}
 }
 
-float Solve::linearFunc(Formula formula)
+double Solve::linearFunc(Formula formula)
 {
 	return linearFunc(formula.getAllFactors());
 }
 
-vector<float> Solve::quadraticFunc(vector<float> factors)
+vector<double> Solve::quadraticFunc(vector<double> factors)
 {
 	if (isQuadratic(factors))
 	{
-		float a = factors[2];
-		float b = factors[1];
-		float c = factors[0];
+		double a = factors[2];
+		double b = factors[1];
+		double c = factors[0];
 
-		float delta = pow(b, 2) - 4*a*c; 
+		double delta = pow(b, 2) - 4*a*c; 
 
-		if(delta < 0) return vector<float>();
+		if(delta < 0) return vector<double>();
 		else if (delta == 0)
 		{
-			float x0 = ((-b) / (2 * a));
+			double x0 = ((-b) / (2 * a));
 
-			vector<float> root;
+			vector<double> root;
 			root.push_back(x0);
 
 			return root;
 		}
 		else if (delta > 0)
 		{
-			float deltaSquareRoot = sqrt(delta);
+			double deltaSquareRoot = sqrt(delta);
 
-			float x1 = ((-b - deltaSquareRoot) / (2 * a));
-			float x2 = ((-b + deltaSquareRoot) / (2 * a));
+			double x1 = ((-b - deltaSquareRoot) / (2 * a));
+			double x2 = ((-b + deltaSquareRoot) / (2 * a));
 
-			vector<float> roots;
+			vector<double> roots;
 			roots.push_back(x1);
 			roots.push_back(x2);
 
@@ -67,95 +68,170 @@ vector<float> Solve::quadraticFunc(vector<float> factors)
 	}
 	else
 	{
-		wcout << L"ALERT (Funkcja kwadratowa): Przekazano funkcjê inn¹ ni¿ kwadratowa!!!" << endl;
-		throw runtime_error("ALERT (Funkcja kwadratowa): Przekazano funkcjê inn¹ ni¿ kwadratowa!!!");
+		wcout << L"ALERT (Funkcja kwadratowa): Przekazano funkcjÄ™ innÄ… niÅ¼ kwadratowa!!!" << endl;
+		throw runtime_error("ALERT (Funkcja kwadratowa): Przekazano funkcjÄ™ innÄ… niÅ¼ kwadratowa!!!");
 
-		return vector<float>();
+		return vector<double>();
 	}
 }
 
-vector<float> Solve::quadraticFunc(Formula formula)
+vector<double> Solve::quadraticFunc(Formula formula)
 {
 	return quadraticFunc(formula.getAllFactors());
 }
 
-set<float> Solve::cubicFuncAndHigher(Formula& formula)
+set<double> Solve::cubicFuncAndHigher(Formula formula)
 {
-	set<float> roots;
-	
+	set<double> roots;
+
 	auto newFormulas = pullOutBeforeBracket(formula);
 
-	if(newFormulas.first.isEmpty() == true) roots = theoremOfBezout(formula);
-	else
+	if (newFormulas.first.isEmpty() == true)
 	{
-		// Jeœli metoda 'pullOutBeforeBracket()' zdo³a³a coœ wyci¹gn¹æ przed nawias,
-		// to oznacza to, ¿e znaleziono kolejny pierwiastek, który jest równy 0
+		roots = substitutionToQuadraticFunc(formula);
+
+		if (roots.size() > 0) return roots;
+
+		roots = theoremOfBezout(formula);
+	}
+	else if((newFormulas.first.isEmpty() == false) && (newFormulas.first.getDegree() > 0))
+	{
+		// JeÅ›li metoda 'pullOutBeforeBracket()' zdoÅ‚aÅ‚a coÅ› wyciÄ…gnÄ…Ä‡ przed nawias,
+		// to oznacza to, Å¼e znaleziono kolejny pierwiastek, ktÃ³ry jest rÃ³wny 0
 		roots.insert(0);
 
-		auto nextRoots = cubicFuncAndHigher(newFormulas.second);
+		wcout << newFormulas.second.convertToText().c_str() << endl;
 
+		if (isLinear(newFormulas.second))
+		{
+			roots.insert(linearFunc(newFormulas.second));
+
+			return roots;
+		}
+		else if (isQuadratic(newFormulas.second))
+		{
+			auto quadraticFunctionRoots = quadraticFunc(newFormulas.second);
+			for (auto i : quadraticFunctionRoots) roots.insert(i);
+
+			return roots;
+		}
+
+		auto nextRoots = substitutionToQuadraticFunc(newFormulas.second);
+		if (nextRoots.size() > 0)
+		{
+			for (auto i : nextRoots) roots.insert(i);
+			return roots;
+		}
+
+		nextRoots = theoremOfBezout(newFormulas.second);
 		for (auto i : nextRoots) roots.insert(i);
 	}
 
 	return roots;
 }
 
-set<float> Solve::substitutionToQuadraticFunc(Formula formula)
+set<double> Solve::substitutionToQuadraticFunc(Formula formula)
 {
 	formula.removeZeroFactorsFromTheBeginning();
 
+	// WstÄ™pny filtr, dopuszczajÄ…cy tylko wielomiany wielomiany, ktÃ³rych stopieÅ„ jest 'n' razy wiÄ™kszy od 2
 	if ((formula.isEmpty() == true) || 
-		(formula.getDegree() < 3) || 
-		(formula.getDegree() % 2 != 0)) return set<float>();
+		(formula.getDegree() < 4) || 
+		(formula.getDegree() % 2 != 0) ||
+		(formula.getNumberOfNonzeroFactors() > 3)) return set<double>();
 
+	// Sprawdzenie czy przesÅ‚any wielomian da siÄ™ zapisaÄ‡ w psotaci: a*t^(n*2) + b*t^n + c
 	if (formula.getNumberOfNonzeroFactors() <= 3)
 	{
-		// Sprawdzenie czy "œrodkowy" wspó³czynnik (wspó³czynnik niewiadomej podniesionej do potêgi wy¿szej ni¿ 0
-		//  i ni¿szej ni¿ najwy¿sza potêga), o ile istnieje, stoi przy niewiadomej podniesionej do potêgi równej po³owie
-		// wyk³adnika najwy¿szej potêgi.
-		// To jest warunkiem skorzystania z mo¿liwoœci takiego przyk³adowego zapisu: t=x^2
+		// Sprawdzenie czy "Å›rodkowy" wspÃ³Å‚czynnik (wspÃ³Å‚czynnik niewiadomej podniesionej do potÄ™gi wyÅ¼szej niÅ¼ 0
+		// i niÅ¼szej niÅ¼ najwyÅ¼sza potÄ™ga), o ile istnieje, stoi przy niewiadomej podniesionej do potÄ™gi rÃ³wnej poÅ‚owie
+		// wykÅ‚adnika najwyÅ¼szej potÄ™gi.
+		// To jest warunkiem skorzystania z moÅ¼liwoÅ›ci takiego przykÅ‚adowego zapisu: t=x^2
 		for (int i = 1; i < formula.getDegree(); i++)
 		{
 			if (formula.getFactor(i) == 0) continue;
 			else
 			{
-				if (formula.getFactor(i) != formula.getDegree() / 2) return set<float>();
+				if (((i == formula.getDegree()/2) && (formula.getFactor(i) == 0)) ||
+					((i != formula.getDegree() / 2) && (formula.getFactor(i) != 0))) return set<double>();
 
 				break;
 			}
 		}
 	}
 
+	// OkreÅ›la ile razy wiÄ™kszy jest najwyÅ¼szy wykÅ‚adnik potÄ™gi przy niewiadomej 'x' 
+	// z przesÅ‚anego wielomianu od potÄ™gi 2. funkcji kwadratowej, do ktÃ³rej sprowadzamy przesÅ‚ane rÃ³wnanie
+	int howManyTimesBiggerTheHighestExponentThanTwo = formula.getDegree() / 2;
+
+	// Stworzenie wielomianu kwadratowego na podstawie przesÅ‚anego wielomianu
 	Formula modifiedFormula;
 
-	for (auto i : formula.getAllFactors()) modifiedFormula.setFactor();
+	modifiedFormula.setFactor(0, formula.getFactor(0));
+	modifiedFormula.setFactor(1, formula.getFactor(formula.getDegree() / 2));
+	modifiedFormula.setFactor(2, formula.getFactor(formula.getDegree()));
 
+	auto rootsFromSolvePreparedFormula = quadraticFunc(modifiedFormula);
 
-	return set<float>();
+	set<double> roots;
+
+	// Obliczanie pierwiastkÃ³w n-tego stopnia (mam na myÅ›li dziaÅ‚anie matematyczne: âˆš) 
+	// (n-ty stopieÅ„ rÃ³wny jest poÅ‚owie stopnia caÅ‚ego przesÅ‚anego wielomianu)
+	// z uzyskanych miejsc zerowych funkcji kwadratowej, ktÃ³rÄ… przed chwilÄ… utworzyliÅ›my
+	for (auto i : rootsFromSolvePreparedFormula)
+	{
+		// JeÅ›li wspomiane wyÅ¼ej 'n' (czyli poÅ‚owa stopnia przesÅ‚anego wielomianu) jest parzyste, 
+		// to ostateczne obliczane przez nas rozwiÄ…zania wielomianu mogÄ… byÄ‡ tylko wynikiem pierwiastkowana 
+		// liczb dodatnich (bo np.: x^2!=-4 ), a skoro przykÅ‚adowe: x^2=4 to x=2 lub x=-2, to otrzymujemy 
+		// zawsze dwa wyniki pierwiastkowania ('a' oraz '-a')
+		if ((howManyTimesBiggerTheHighestExponentThanTwo % 2 == 0) && (i >= 0))
+		{
+			roots.insert(-pow(i, (1.0 / ((double)formula.getDegree() / 2.0))));
+			roots.insert(pow(i, (1.0 / ((double)formula.getDegree() / 2.0))));
+		}
+
+		// JeÅ›li 'n' jest nieparzyste, to ostateczne obliczane przez nas rozwiÄ…zania wielomianu mogÄ… byÄ‡ 
+		// wynikiem pierwiastkowana liczb dodatnich i ujemnych (bo np.: x^3 moÅ¼e byÄ‡ rÃ³wne -8), 
+		// a skoro przykÅ‚adowe: x^3=-8 to x=-2, a zatem otrzymujemy tylko jeden wynik pierwiastkowania
+		else if (howManyTimesBiggerTheHighestExponentThanTwo % 2 != 0)
+		{
+			if (i >= 0) roots.insert(pow(i, (1.0 / ((double)formula.getDegree() / 2.0))));
+			else if (i < 0) roots.insert(-pow(-i, (1.0 / ((double)formula.getDegree() / 2.0)) ));
+		}
+	}
+
+	return roots;
 }
 
-set<float> Solve::theoremOfBezout(Formula &formula)
+set<double> Solve::theoremOfBezout(Formula formula)
 {
-	if (formula.getFactor(0) == 0) return set<float>();
+	if (formula.getFactor(0) == 0) return set<double>();
 
 	/////////////////////////////////////////////////////////////////////////////////
 
 	auto potentialRationalRoots = getPotentialRationalRoots(formula);
 
-	float firstRoot;
-	for (int i = 0; i < potentialRationalRoots.size(); i++)
+	double firstRoot = 0;
+	for (auto i : potentialRationalRoots)
 	{
-		if (formula.getY(potentialRationalRoots[i]) == 0)
+		if (formula.getY(i) == 0)
 		{
-			firstRoot = potentialRationalRoots[i];
+			firstRoot = i;
 			break;
 		}
 	}
 
-	set<float> roots;
+	// Nie moÅ¼na dzieliÄ‡ przez 0, dlatego zero nie mogÅ‚o Å¼adnym z potencjalnych znalezionych pierwiastkÃ³w,
+	// a co za tym idzie dla tego wielomianu nie jest speÅ‚nione twierdznie o pierwiastkach rzeczywistych
+	// i dalsze wykonywanie tej metody przyniesie tylko bÅ‚Ä™dy
+	if(firstRoot == 0) return set<double>();
+
+	/////////////////////////////////////////////////////////////////////////////////
+
+	set<double> roots;
 	roots.insert(firstRoot);
 
-	Formula subtrahend(vector<float>{-firstRoot, 1});
+	Formula subtrahend(vector<double>{-firstRoot, 1});
 	Formula divisionResult = divisionFormulas(formula, subtrahend).first;
 
 	if (isLinear(divisionResult)) roots.insert(-divisionResult.getFactor(0));
@@ -166,79 +242,65 @@ set<float> Solve::theoremOfBezout(Formula &formula)
 	}
 	else if (divisionResult.getDegree() >= 3)
 	{
-		auto nextRoots = theoremOfBezout(divisionResult);
-		for (auto i : nextRoots)
-		{
-			wcout << i << endl;
-			roots.insert(i);
-		}
+		auto nextRoots = cubicFuncAndHigher(divisionResult);
+		for (auto i : nextRoots) roots.insert(i);
 	}
 
 	return roots;
 }
 
-vector<int> Solve::getDividers(float numberToDivide)
+set<int> Solve::getDividers(double numberToDivide)
 {
-	vector<int> dividers;
+	set<int> dividers;
 	
-	if (numberToDivide != 0)
-	{
-		dividers.push_back(1);
-		dividers.push_back(-1);
-	}
+	if (numberToDivide == 0) return set<int>();
 
-	if (numberToDivide > 1)
-	{
-		dividers.push_back(numberToDivide);
-		dividers.push_back(-numberToDivide);
-	}
+	dividers.insert(1);
+	dividers.insert(-1);
+
+	dividers.insert(numberToDivide);
+	dividers.insert(-numberToDivide);
+
+	if (numberToDivide < 0) numberToDivide *= -1;
 
 	for (int i = 2; i <= numberToDivide / 2; i++) 
 	{
 		if (fmod(numberToDivide, i) == 0)
 		{
-			dividers.push_back(i);
-			dividers.push_back(-i);
+			dividers.insert(i);
+			dividers.insert(-i);
 		}
 	}
 
 	return dividers;
 }
 
-vector<float> Solve::getPotentialRationalRoots(Formula formula)
+set<double> Solve::getPotentialRationalRoots(Formula formula)
 {
-	float zeroFactor = formula.getFactor(0);
-	float lastFactor = formula.getFactor(formula.getDegree());
+	double zeroFactor = formula.getFactor(0);
+	double lastFactor = formula.getFactor(formula.getDegree());
 
 	auto p = getDividers(zeroFactor);
 	auto q = getDividers(lastFactor);
 
-	vector<float> potentialRationalRoots;
+	set<double> potentialRationalRoots;
 
-	for (int i = 0; i < p.size(); i++)
-	{
-		for (int j = 0; j < q.size(); j++)
-		{
-			float pq = (float)p[i] / (float)q[j];
-
-			auto iterator = find(potentialRationalRoots.begin(), potentialRationalRoots.end(), pq);
-
-			if (iterator == potentialRationalRoots.end()) potentialRationalRoots.push_back(pq);
-		}
-	}
+	for (auto i : p)
+		for (auto j : q)
+			potentialRationalRoots.insert(((double)i / (double)j));
 
 	return potentialRationalRoots;
 }
 
-set<float> Solve::commonPartOfCollections(vector<vector<float>> collections)
+set<double> Solve::commonPartOfCollections(vector<vector<double>> collections)
 {
-	if(collections.size() < 1) return set<float>();
+	if(collections.size() < 1) return set<double>();
 
-	set<float> commonPart;
+	set<double> commonPart;
 
 	for (auto i : collections[0])
 	{
-		float numberToCheck = i;
+		double numberToCheck = i;
 		bool isCommon = true;
 
 		for (auto j : collections)
@@ -258,9 +320,9 @@ set<float> Solve::commonPartOfCollections(vector<vector<float>> collections)
 	return commonPart;
 }
 
-set<float> Solve::commonPartOfCollections(initializer_list<vector<float>> collections)
+set<double> Solve::commonPartOfCollections(initializer_list<vector<double>> collections)
 {
-	vector<vector<float>> vector_collections(collections.begin(), collections.end());
+	vector<vector<double>> vector_collections(collections.begin(), collections.end());
 
 	auto commonPart = commonPartOfCollections(vector_collections);
 
@@ -271,24 +333,24 @@ pair<Formula, Formula> Solve::pullOutBeforeBracket(Formula formula)
 {
 	if(formula.getDegree() < 1) return pair<Formula, Formula>(Formula(), formula);
 
-	vector<vector<float>> dividersOfAllFactors;
+	vector<vector<double>> dividersOfAllFactors;
 
 	for (auto i : formula.getAllFactors())
 	{
 		if (i == 0) continue;
 
 		auto int_dividers = getDividers(i);
-		vector<float> float_dividers(int_dividers.begin(), int_dividers.end());
+		vector<double> double_dividers(int_dividers.begin(), int_dividers.end());
 
-		dividersOfAllFactors.push_back(float_dividers);
+		dividersOfAllFactors.push_back(double_dividers);
 	}
 
 	auto factorValueDividers = commonPartOfCollections(dividersOfAllFactors);
 
-	// Wybieramy najwy¿szy wspólny dzielnik wspó³czynników wielomianu:
-	// S¹ one ju¿ posortowane w kontenerze std::set<>, co powoduje, ¿e wystarczy
-	// wybraæ ostatni element, który z automatu jest najwy¿szym
-	float highestFactorValueDivider = *factorValueDividers.rbegin(); // *obj.rbegin() zwraca ostatni element
+	// Wybieramy najwyÅ¼szy wspÃ³lny dzielnik wspÃ³Å‚czynnikÃ³w wielomianu:
+	// SÄ… one juÅ¼ posortowane w kontenerze std::set<>, co powoduje, Å¼e wystarczy
+	// wybraÄ‡ ostatni element, ktÃ³ry z automatu jest najwyÅ¼szym
+	double highestFactorValueDivider = *factorValueDividers.rbegin(); // *obj.rbegin() zwraca ostatni element
 
 	int factorNumber = 0;
 
@@ -301,6 +363,8 @@ pair<Formula, Formula> Solve::pullOutBeforeBracket(Formula formula)
 		}
 	}
 
+	if(factorNumber == 0 && highestFactorValueDivider == 1) return pair<Formula, Formula>(Formula(), formula);
+
 	Formula pulledOutBeforeBracket;
 	pulledOutBeforeBracket.setDegree(factorNumber, true, highestFactorValueDivider);
 
@@ -309,11 +373,11 @@ pair<Formula, Formula> Solve::pullOutBeforeBracket(Formula formula)
 	return pair<Formula, Formula>(pulledOutBeforeBracket, formulaInBracket);
 }
 
-pair<vector<float>, vector<float>> Solve::pullOutBeforeBracket(vector<float> factors)
+pair<vector<double>, vector<double>> Solve::pullOutBeforeBracket(vector<double> factors)
 {
 	auto result = pullOutBeforeBracket(Formula(factors));
 
-	return pair<vector<float>, vector<float>>(result.first.getAllFactors(), result.second.getAllFactors());
+	return pair<vector<double>, vector<double>>(result.first.getAllFactors(), result.second.getAllFactors());
 }
 
 Formula Solve::addingFormulas(Formula formula1, Formula formula2)
@@ -327,8 +391,8 @@ Formula Solve::addingFormulas(Formula formula1, Formula formula2)
 
 	for (int i = 0; i <= initialDegree; i++)
 	{
-		float formula1x = formula1.getFactor(i);
-		float formula2x = formula2.getFactor(i);
+		double formula1x = formula1.getFactor(i);
+		double formula2x = formula2.getFactor(i);
 			
 		newFormula.setFactor(i, formula1x + formula2x);
 	}
@@ -336,10 +400,10 @@ Formula Solve::addingFormulas(Formula formula1, Formula formula2)
 	return newFormula;
 }
 
-vector<float> Solve::addingFormulas(vector<float> factors1, vector<float> factors2)
+vector<double> Solve::addingFormulas(vector<double> factors1, vector<double> factors2)
 {
 	Formula outputFormula = addingFormulas(Formula(factors1), Formula(factors2));
-	vector<float> outputFactors = outputFormula.getAllFactors();
+	vector<double> outputFactors = outputFormula.getAllFactors();
 
 	return outputFactors;
 }
@@ -354,10 +418,10 @@ Formula Solve::subtractingFormulas(Formula formula1, Formula formula2)
 	return newFormula;
 }
 
-vector<float> Solve::subtractingFormulas(vector<float> factors1, vector<float> factors2)
+vector<double> Solve::subtractingFormulas(vector<double> factors1, vector<double> factors2)
 {
 	Formula outputFormula = subtractingFormulas(Formula(factors1), Formula(factors2));
-	vector<float> outputFactors = outputFormula.getAllFactors();
+	vector<double> outputFactors = outputFormula.getAllFactors();
 
 	return outputFactors;
 }
@@ -380,9 +444,9 @@ Formula Solve::multiplicationFormulas(Formula formula1, Formula formula2)
 		{
 			if (formula2.getFactor(j) == 0) continue;
 
-			// Numer potêgi, do której bêdzie podniesiony x
+			// Numer potÄ™gi, do ktÃ³rej bÄ™dzie podniesiony x
 			int factorNumber = i + j;
-			float factorValue = formula1.getFactor(i) * formula2.getFactor(j);
+			double factorValue = formula1.getFactor(i) * formula2.getFactor(j);
 
 			newFormula.addToFactor(factorNumber, factorValue);
 		}
@@ -391,10 +455,10 @@ Formula Solve::multiplicationFormulas(Formula formula1, Formula formula2)
 	return newFormula;
 }
 
-vector<float> Solve::multiplicationFormulas(vector<float> factors1, vector<float> factors2)
+vector<double> Solve::multiplicationFormulas(vector<double> factors1, vector<double> factors2)
 {
 	Formula outputFormula = multiplicationFormulas(Formula(factors1), Formula(factors2));
-	vector<float> outputFactors = outputFormula.getAllFactors();
+	vector<double> outputFactors = outputFormula.getAllFactors();
 
 	return outputFactors;
 }
@@ -410,19 +474,19 @@ pair<Formula, Formula> Solve::divisionFormulas(Formula formula1, Formula formula
 		// 
 		int factorNumberOfNewFactor = i - formula2.getDegree();
 		int a = formula2.getDegree();
-		float factorValueOfNewFactor = formula1Duplicate.getFactor(i) / formula2.getFactor(a);
+		double factorValueOfNewFactor = formula1Duplicate.getFactor(i) / formula2.getFactor(a);
 
 		newFormula.setFactor(factorNumberOfNewFactor, factorValueOfNewFactor);
 
-		// Wielomian zawieraj¹cy pojedynczy a(n)*x^n (nazwijmy to wspó³czynnikiem), który zosta³ przed chwil¹
-		// wyliczony i przez, który zaraz zostanie przemno¿ony wielomian-dzielnik (formula2),
-		// w celu stworzenia wielomianu-oddemnika, który zostanie odjêty od duplikatu pierwotnego wielomianu (formula1Duplicate)
-		// czego skutkiem bêdzie zniwielowanie ixa z najwy¿sz¹ potêg¹
+		// Wielomian zawierajÄ…cy pojedynczy a(n)*x^n (nazwijmy to wspÃ³Å‚czynnikiem), ktÃ³ry zostaÅ‚ przed chwilÄ…
+		// wyliczony i przez, ktÃ³ry zaraz zostanie przemnoÅ¼ony wielomian-dzielnik (formula2),
+		// w celu stworzenia wielomianu-oddemnika, ktÃ³ry zostanie odjÄ™ty od duplikatu pierwotnego wielomianu (formula1Duplicate)
+		// czego skutkiem bÄ™dzie zniwielowanie ixa z najwyÅ¼szÄ… potÄ™gÄ…
 		Formula newCalculatedFactor(factorNumberOfNewFactor);
 		newCalculatedFactor.setFactor(factorNumberOfNewFactor, factorValueOfNewFactor);
 
-		// Wielomian, który bêdzie ka¿dorazowo odejmowany (odjemnik) od ci¹glê modyfikowanego duplikatu
-		// pierwotnego wielomianu - formula1Duplicate (odjemna), tak jak ma to miejsce podczas dzielenia wielomianów "pod kresk¹"
+		// Wielomian, ktÃ³ry bÄ™dzie kaÅ¼dorazowo odejmowany (odjemnik) od ciÄ…glÄ™ modyfikowanego duplikatu
+		// pierwotnego wielomianu - formula1Duplicate (odjemna), tak jak ma to miejsce podczas dzielenia wielomianÃ³w "pod kreskÄ…"
 		Formula subtrahend = multiplicationFormulas(newCalculatedFactor, formula2);
 
 		formula1Duplicate = subtractingFormulas(formula1Duplicate, subtrahend);
@@ -436,16 +500,16 @@ pair<Formula, Formula> Solve::divisionFormulas(Formula formula1, Formula formula
 	}
 }
 
-pair<vector<float>, vector<float>> Solve::divisionFormulas(vector<float> factors1, vector<float> factors2)
+pair<vector<double>, vector<double>> Solve::divisionFormulas(vector<double> factors1, vector<double> factors2)
 {
 	auto divisionResult = divisionFormulas(Formula(factors1), Formula(factors2));
-	vector<float> productForm = divisionResult.first.getAllFactors();
-	vector<float> rest = divisionResult.second.getAllFactors();
+	vector<double> productForm = divisionResult.first.getAllFactors();
+	vector<double> rest = divisionResult.second.getAllFactors();
 
-	return pair<vector<float>, vector<float>>(productForm, rest);
+	return pair<vector<double>, vector<double>>(productForm, rest);
 }
 
-bool Solve::isLinear(vector<float> factors)
+bool Solve::isLinear(vector<double> factors)
 {
 	if (factors.size() == 2 && factors[1] != 0) return true;
 	else return false;
@@ -453,12 +517,12 @@ bool Solve::isLinear(vector<float> factors)
 
 bool Solve::isLinear(Formula formula)
 {
-	vector<float> factors = formula.getAllFactors();
+	vector<double> factors = formula.getAllFactors();
 
 	return isLinear(factors);
 }
 
-bool Solve::isQuadratic(vector<float> factors)
+bool Solve::isQuadratic(vector<double> factors)
 {
 	if(factors.size() == 3 && factors[2] != 0) return true;
 	else return false;
@@ -466,7 +530,7 @@ bool Solve::isQuadratic(vector<float> factors)
 
 bool Solve::isQuadratic(Formula formula)
 {
-	vector<float> factors = formula.getAllFactors();
+	vector<double> factors = formula.getAllFactors();
 
 	return isQuadratic(factors);
 }
@@ -477,7 +541,7 @@ bool Solve::isCubicOrHigher(Formula formula)
 	else return false;
 }
 
-bool Solve::isCubicOrHigher(vector<float> factors)
+bool Solve::isCubicOrHigher(vector<double> factors)
 {
 	return isCubicOrHigher(Formula(factors));
 }
