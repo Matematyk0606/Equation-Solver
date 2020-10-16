@@ -38,7 +38,7 @@ To-do list:
 Project is: _in progress_
 
 ## Inspiration
-I was inspired to create this app by calculating equations in school and home
+I was inspired to create this app by calculating equations in school and home.
 
 ## Contact
 e-mail: matematyk.tmobile@gmail.com
